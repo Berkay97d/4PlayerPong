@@ -1,179 +1,163 @@
-import random
-import pygame, sys
-from pygame.locals import *
+import pygame
 
-pygame.init()
-fps = pygame.time.Clock()
+from Entities import *
+from DataTypes import *
 
-# colors
+# COLOR
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
 BLACK = (0, 0, 0)
-
-# globals
-WIDTH = 600
-HEIGHT = 400
-BALL_RADIUS = 20
-PAD_WIDTH = 8
-PAD_HEIGHT = 80
-HALF_PAD_WIDTH = PAD_WIDTH / 2
-HALF_PAD_HEIGHT = PAD_HEIGHT / 2
-ball_pos = [0, 0]
-ball_vel = [0, 0]
-paddle1_vel = 0
-paddle2_vel = 0
-l_score = 0
-r_score = 0
-
-# canvas declaration
-window = pygame.display.set_mode((WIDTH, HEIGHT), 0, 32)
-pygame.display.set_caption('Hello World')
+GREY = (64, 64, 64)
 
 
-# helper function that spawns a ball, returns a position vector and a velocity vector
-# if right is True, spawn to the right, else spawn to the left
-def ball_init(right):
-    global ball_pos, ball_vel  # these are vectors stored as lists
-    ball_pos = [WIDTH / 2, HEIGHT / 2]
-    horz = random.randrange(2, 4)
-    vert = random.randrange(1, 3)
+# SCREEN
+SCREEN_SIZE = Vector2(1080, 1080) * .9
+SCREEN_HALF_SIZE = SCREEN_SIZE * 0.5
 
-    if right == False:
-        horz = - horz
+SCREEN_COLOR = GREY
 
-    ball_vel = [horz, -vert]
+SCREEN_BOTTOM_LEFT = Vector2(0, SCREEN_SIZE.y)
+SCREEN_BOTTOM_RIGHT = SCREEN_SIZE
+SCREEN_UP_RIGHT = Vector2(SCREEN_SIZE.x, 0)
+SCREEN_UP_LEFT = Vector2(0, 0)
+
+GAME_TITLE = '4 PLAYER PONG'
+
+FPS = 120
+
+# BALL
+BALL_RADIUS = 10
+BALL_COLOR = BLACK
 
 
-# define event handlers
-def init():
-    global paddle1_pos, paddle2_pos, paddle1_vel, paddle2_vel, l_score, r_score  # these are floats
-    global score1, score2  # these are ints
-    paddle1_pos = [HALF_PAD_WIDTH - 1, HEIGHT / 2]
-    paddle2_pos = [WIDTH + 1 - HALF_PAD_WIDTH, HEIGHT / 2]
-    l_score = 0
-    r_score = 0
-    if random.randrange(0, 2) == 0:
-        ball_init(True)
+# PADDLE
+PADDLE_SPEED = 500
+
+P1_COLOR = WHITE
+P2_COLOR = RED
+P3_COLOR = GREEN
+P4_COLOR = BLUE
+
+PADDLE_WIDTH = 100
+PADDLE_HEIGHT = 20
+
+PADDLE_HALF_WIDTH = PADDLE_WIDTH * 0.5
+PADDLE_HALF_HEIGHT = PADDLE_HEIGHT * 0.5
+
+
+# ENVIRONMENT
+BORDER_THICKNESS = 5
+
+
+# FIELDS
+isRunning = True
+gameObjects = {}
+
+
+# INIT
+pg.init()
+screen = pg.display.set_mode((SCREEN_SIZE.x, SCREEN_SIZE.y))
+pg.display.set_caption(GAME_TITLE)
+
+
+# FUNCTIONS
+def main():
+    init_gameobjects()
+    clock = pg.time.Clock()
+
+    while isRunning:
+        clock.tick(FPS)
+        draw()
+        update()
+
+    pg.quit()
+
+
+def update():
+    handle_events()
+    handle_inputs()
+    move_gameobjects(1.0/FPS)
+
+
+def init_gameobjects():
+    paddle1 = Paddle(screen, 'P1', Vector2(SCREEN_HALF_SIZE.x, SCREEN_SIZE.y - PADDLE_HALF_HEIGHT), Vector2(PADDLE_WIDTH, PADDLE_HEIGHT), P1_COLOR, Vector2.right(), PADDLE_SPEED)
+    paddle2 = Paddle(screen, 'P2', Vector2(SCREEN_SIZE.x - PADDLE_HALF_HEIGHT, SCREEN_HALF_SIZE.y), Vector2(PADDLE_HEIGHT, PADDLE_WIDTH), P2_COLOR, Vector2.down(), PADDLE_SPEED)
+    paddle3 = Paddle(screen, 'P3', Vector2(SCREEN_HALF_SIZE.x, PADDLE_HALF_HEIGHT), Vector2(PADDLE_WIDTH, PADDLE_HEIGHT), P3_COLOR, Vector2.right(), PADDLE_SPEED)
+    paddle4 = Paddle(screen, 'P4', Vector2(PADDLE_HALF_HEIGHT, SCREEN_HALF_SIZE.y), Vector2(PADDLE_HEIGHT, PADDLE_WIDTH), P4_COLOR, Vector2.down(), PADDLE_SPEED)
+    ball = Ball(screen, 'ball', SCREEN_HALF_SIZE, BALL_RADIUS, BALL_COLOR)
+    global gameObjects
+    gameObjects = [paddle1, paddle2, paddle3, paddle4, ball]
+
+
+def move_gameobjects(delta_time):
+    for gameobject in gameObjects:
+        gameobject.move(delta_time)
+
+
+def handle_events():
+    global isRunning
+    for event in pg.event.get():
+        if event.type == pg.QUIT:
+            isRunning = False
+            break
+
+
+def draw_borders():
+    pg.draw.rect(screen, P2_COLOR, (SCREEN_SIZE.x - BORDER_THICKNESS, 0, BORDER_THICKNESS, SCREEN_SIZE.y))
+    pg.draw.rect(screen, P4_COLOR, (0, 0, BORDER_THICKNESS, SCREEN_SIZE.y))
+    pg.draw.rect(screen, P1_COLOR, (0, SCREEN_SIZE.y - BORDER_THICKNESS, SCREEN_SIZE.x, BORDER_THICKNESS))
+    pg.draw.rect(screen, P3_COLOR, (0, 0, SCREEN_SIZE.x, BORDER_THICKNESS))
+
+
+def draw_gameobjects():
+    for gameObject in gameObjects:
+        gameObject.draw()
+
+
+def draw():
+    screen.fill(SCREEN_COLOR)
+    draw_borders()
+    draw_gameobjects()
+    pg.display.update()
+
+
+def handle_inputs():
+    if get_key(pygame.K_d):
+        gameObjects[0].move_right()
+    elif get_key(pygame.K_a):
+        gameObjects[0].move_left()
     else:
-        ball_init(False)
+        gameObjects[0].stop()
+
+    if get_key(pygame.K_w):
+        gameObjects[1].move_right()
+    elif get_key(pygame.K_s):
+        gameObjects[1].move_left()
+    else:
+        gameObjects[1].stop()
+
+    if get_key(pygame.K_RIGHT):
+        gameObjects[2].move_right()
+    elif get_key(pygame.K_LEFT):
+        gameObjects[2].move_left()
+    else:
+        gameObjects[2].stop()
+
+    if get_key(pygame.K_UP):
+        gameObjects[3].move_right()
+    elif get_key(pygame.K_DOWN):
+        gameObjects[3].move_left()
+    else:
+        gameObjects[3].stop()
 
 
-# draw function of canvas
-def draw(canvas):
-    global paddle1_pos, paddle2_pos, ball_pos, ball_vel, l_score, r_score
 
-    canvas.fill(BLACK)
-    pygame.draw.line(canvas, WHITE, [WIDTH / 2, 0], [WIDTH / 2, HEIGHT], 1)
-    pygame.draw.line(canvas, WHITE, [PAD_WIDTH, 0], [PAD_WIDTH, HEIGHT], 1)
-    pygame.draw.line(canvas, WHITE, [WIDTH - PAD_WIDTH, 0], [WIDTH - PAD_WIDTH, HEIGHT], 1)
-    pygame.draw.circle(canvas, WHITE, [WIDTH // 2, HEIGHT // 2], 70, 1)
-
-    # update paddle's vertical position, keep paddle on the screen
-    if paddle1_pos[1] > HALF_PAD_HEIGHT and paddle1_pos[1] < HEIGHT - HALF_PAD_HEIGHT:
-        paddle1_pos[1] += paddle1_vel
-    elif paddle1_pos[1] == HALF_PAD_HEIGHT and paddle1_vel > 0:
-        paddle1_pos[1] += paddle1_vel
-    elif paddle1_pos[1] == HEIGHT - HALF_PAD_HEIGHT and paddle1_vel < 0:
-        paddle1_pos[1] += paddle1_vel
-
-    if paddle2_pos[1] > HALF_PAD_HEIGHT and paddle2_pos[1] < HEIGHT - HALF_PAD_HEIGHT:
-        paddle2_pos[1] += paddle2_vel
-    elif paddle2_pos[1] == HALF_PAD_HEIGHT and paddle2_vel > 0:
-        paddle2_pos[1] += paddle2_vel
-    elif paddle2_pos[1] == HEIGHT - HALF_PAD_HEIGHT and paddle2_vel < 0:
-        paddle2_pos[1] += paddle2_vel
-
-    # update ball
-    ball_pos[0] += int(ball_vel[0])
-    ball_pos[1] += int(ball_vel[1])
-
-    # draw paddles and ball
-    pygame.draw.circle(canvas, RED, ball_pos, 20, 0)
-    pygame.draw.polygon(canvas, GREEN, [[paddle1_pos[0] - HALF_PAD_WIDTH, paddle1_pos[1] - HALF_PAD_HEIGHT],
-                                        [paddle1_pos[0] - HALF_PAD_WIDTH, paddle1_pos[1] + HALF_PAD_HEIGHT],
-                                        [paddle1_pos[0] + HALF_PAD_WIDTH, paddle1_pos[1] + HALF_PAD_HEIGHT],
-                                        [paddle1_pos[0] + HALF_PAD_WIDTH, paddle1_pos[1] - HALF_PAD_HEIGHT]], 0)
-    pygame.draw.polygon(canvas, GREEN, [[paddle2_pos[0] - HALF_PAD_WIDTH, paddle2_pos[1] - HALF_PAD_HEIGHT],
-                                        [paddle2_pos[0] - HALF_PAD_WIDTH, paddle2_pos[1] + HALF_PAD_HEIGHT],
-                                        [paddle2_pos[0] + HALF_PAD_WIDTH, paddle2_pos[1] + HALF_PAD_HEIGHT],
-                                        [paddle2_pos[0] + HALF_PAD_WIDTH, paddle2_pos[1] - HALF_PAD_HEIGHT]], 0)
-
-    # ball collision check on top and bottom walls
-    if int(ball_pos[1]) <= BALL_RADIUS:
-        ball_vel[1] = - ball_vel[1]
-    if int(ball_pos[1]) >= HEIGHT + 1 - BALL_RADIUS:
-        ball_vel[1] = -ball_vel[1]
-
-    # ball collison check on gutters or paddles
-    if int(ball_pos[0]) <= BALL_RADIUS + PAD_WIDTH and int(ball_pos[1]) in range(paddle1_pos[1] - HALF_PAD_HEIGHT,
-                                                                                 paddle1_pos[1] + HALF_PAD_HEIGHT, 1):
-        ball_vel[0] = -ball_vel[0]
-        ball_vel[0] *= 1.1
-        ball_vel[1] *= 1.1
-    elif int(ball_pos[0]) <= BALL_RADIUS + PAD_WIDTH:
-        r_score += 1
-        ball_init(True)
-
-    if int(ball_pos[0]) >= WIDTH + 1 - BALL_RADIUS - PAD_WIDTH and int(ball_pos[1]) in range(
-            paddle2_pos[1] - HALF_PAD_HEIGHT, paddle2_pos[1] + HALF_PAD_HEIGHT, 1):
-        ball_vel[0] = -ball_vel[0]
-        ball_vel[0] *= 1.1
-        ball_vel[1] *= 1.1
-    elif int(ball_pos[0]) >= WIDTH + 1 - BALL_RADIUS - PAD_WIDTH:
-        l_score += 1
-        ball_init(False)
-
-    # update scores
-    myfont1 = pygame.font.SysFont("Comic Sans MS", 20)
-    label1 = myfont1.render("Score " + str(l_score), 1, (255, 255, 0))
-    canvas.blit(label1, (50, 20))
-
-    myfont2 = pygame.font.SysFont("Comic Sans MS", 20)
-    label2 = myfont2.render("Score " + str(r_score), 1, (255, 255, 0))
-    canvas.blit(label2, (470, 20))
+def get_key(key):
+    keys = pg.key.get_pressed()
+    return keys[key]
 
 
-# keydown handler
-def keydown(event):
-    global paddle1_vel, paddle2_vel
-
-    if event.key == K_UP:
-        paddle2_vel = -8
-    elif event.key == K_DOWN:
-        paddle2_vel = 8
-    elif event.key == K_w:
-        paddle1_vel = -8
-    elif event.key == K_s:
-        paddle1_vel = 8
-
-
-# keyup handler
-def keyup(event):
-    global paddle1_vel, paddle2_vel
-
-    if event.key in (K_w, K_s):
-        paddle1_vel = 0
-    elif event.key in (K_UP, K_DOWN):
-        paddle2_vel = 0
-
-
-init()
-
-# game loop
-while True:
-
-    draw(window)
-
-    for event in pygame.event.get():
-
-        if event.type == KEYDOWN:
-            keydown(event)
-        elif event.type == KEYUP:
-            keyup(event)
-        elif event.type == QUIT:
-            pygame.quit()
-            sys.exit()
-
-    pygame.display.update()
-    fps.tick(60)
+if __name__ == '__main__':
+    main()
