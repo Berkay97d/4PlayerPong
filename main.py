@@ -71,14 +71,14 @@ def main():
     clock = pg.time.Clock()
     while isRunning:
         clock.tick(FPS)
-        draw()
+        handle_events()
         update()
+        draw()
 
     pg.quit()
 
 
 def update():
-    handle_events()
     handle_inputs()
     move_gameobjects(1.0 / FPS)
     handle_collision()
@@ -134,6 +134,7 @@ def init_gameobjects():
     global scoreboards
     scoreboards = [p1_scoreboard, p2_scoreboard, p3_scoreboard, p4_scoreboard]
     init_ball()
+
 
 
 def init_ball():

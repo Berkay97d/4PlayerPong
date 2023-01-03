@@ -51,10 +51,10 @@ class Paddle(GameObject):
 
 class Ball(GameObject):
 
-    def __init__(self, name, position, shape, owner=None):
+    def __init__(self, name, position, shape):
         super().__init__(name, position, shape)
         self.collider = CircleCollider(position, shape.radius)
-        self.owner = owner
+        self.owner = None
 
     def draw(self):
         self.shape.draw(self.position)
@@ -63,6 +63,7 @@ class Ball(GameObject):
         direction = (self.position - paddle.position).normalized()
         self.velocity = direction * self.velocity.magnitude()
         self.owner = paddle
+        self.shape.color = self.owner.shape.color
 
     def on_hit_border(self, score):
         if self.owner is None:
