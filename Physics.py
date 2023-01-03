@@ -1,6 +1,11 @@
 class Physics:
     @staticmethod
     def box_collider2d_circle_collider_intersects(box_collider2d, circle_collider):
+        if box_collider2d is None:
+            return False
+        if circle_collider is None:
+            return False
+
         is_right = (circle_collider.center.x - circle_collider.radius) - (box_collider2d.center.x + box_collider2d.size.x / 2) > 0
         is_left = (circle_collider.center.x + circle_collider.radius) - (box_collider2d.center.x - box_collider2d.size.x / 2) < 0
 

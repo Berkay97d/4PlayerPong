@@ -1,5 +1,6 @@
 import pygame
 
+from Shapes import *
 from Entities import *
 from DataTypes import *
 
@@ -22,12 +23,12 @@ SCREEN_BOTTOM_RIGHT = SCREEN_SIZE
 SCREEN_UP_RIGHT = Vector2(SCREEN_SIZE.x, 0)
 SCREEN_UP_LEFT = Vector2(0, 0)
 
+# GAME SETTINGS
 GAME_TITLE = '4 PLAYER PONG'
-
 FPS = 120
-
+SCORE_MULTIPLIER = 1
 # BALL
-BALL_RADIUS = 25
+BALL_RADIUS = 10
 BALL_COLOR = BLACK
 
 # PADDLE
@@ -49,9 +50,10 @@ BORDER_THICKNESS = 5
 
 # FIELDS
 isRunning = True
-gameObjects = {}
-paddles = {}
-balls = {}
+gameObjects = []
+paddles = []
+balls = []
+borders = []
 
 # INIT
 pg.init()
@@ -76,33 +78,62 @@ def update():
     handle_events()
     handle_inputs()
     move_gameobjects(1.0 / FPS)
-    keep_objects_in_area()
     handle_collision()
+    handle_points()
+
+
+def init_gameobjects():
+    paddle_shape1 = Rect(screen, P1_COLOR, Vector2(PADDLE_WIDTH, PADDLE_HEIGHT))
+    paddle_shape3 = Rect(screen, P3_COLOR, Vector2(PADDLE_WIDTH, PADDLE_HEIGHT))
+    paddle_shape2 = Rect(screen, P2_COLOR, Vector2(PADDLE_HEIGHT, PADDLE_WIDTH))
+    paddle_shape4 = Rect(screen, P4_COLOR, Vector2(PADDLE_HEIGHT, PADDLE_WIDTH))
+
+    ball_shape = Circle(screen, BALL_COLOR, BALL_RADIUS)
+
+    border_shape1 = Rect(screen, P1_COLOR, Vector2(SCREEN_SIZE.x, BORDER_THICKNESS))
+    border_shape2 = Rect(screen, P2_COLOR, Vector2(BORDER_THICKNESS, SCREEN_SIZE.y))
+    border_shape3 = Rect(screen, P3_COLOR, Vector2(SCREEN_SIZE.x, BORDER_THICKNESS))
+    border_shape4 = Rect(screen, P4_COLOR, Vector2(BORDER_THICKNESS, SCREEN_SIZE.y))
+
+
+    paddle1 = Paddle('P1', Vector2(SCREEN_HALF_SIZE.x, SCREEN_SIZE.y - PADDLE_HALF_HEIGHT), paddle_shape1, Vector2.right(), PADDLE_SPEED)
+    paddle2 = Paddle('P2', Vector2(SCREEN_SIZE.x - PADDLE_HALF_HEIGHT, SCREEN_HALF_SIZE.y), paddle_shape2, Vector2.down(), PADDLE_SPEED)
+    paddle3 = Paddle('P3', Vector2(SCREEN_HALF_SIZE.x, PADDLE_HALF_HEIGHT), paddle_shape3, Vector2.right(), PADDLE_SPEED)
+    paddle4 = Paddle('P4', Vector2(PADDLE_HALF_HEIGHT, SCREEN_HALF_SIZE.y), paddle_shape4, Vector2.down(), PADDLE_SPEED)
+
+    ball = Ball('ball', SCREEN_HALF_SIZE, ball_shape, paddle1)
+
+    p1_border = Border('p1', Vector2(SCREEN_HALF_SIZE.x, SCREEN_SIZE.y - BORDER_THICKNESS / 2), border_shape1)
+    p2_border = Border('p2', Vector2(SCREEN_SIZE.x - BORDER_THICKNESS / 2, SCREEN_HALF_SIZE.y), border_shape2)
+    p3_border = Border('p3', Vector2(SCREEN_HALF_SIZE.x, BORDER_THICKNESS / 2), border_shape3)
+    p4_border = Border('p4', Vector2(BORDER_THICKNESS / 2, SCREEN_HALF_SIZE.y), border_shape4)
+
+
+    global gameObjects
+    gameObjects = [paddle1, paddle2, paddle3, paddle4, ball, p1_border, p2_border, p3_border, p4_border]
+    global paddles
+    paddles = [paddle1, paddle2, paddle3, paddle4]
+    global balls
+    balls = [ball]
+    global borders
+    borders = [p1_border, p2_border, p3_border, p4_border]
 
 
 def handle_collision():
     for paddle in paddles:
         for ball in balls:
             if Physics.box_collider2d_circle_collider_intersects(paddle.collider, ball.collider):
-                ball.on_collision(paddle)
+                ball.on_hit_paddle(paddle)
 
 
-def init_gameobjects():
-    paddle1 = Paddle(screen, 'P1', Vector2(SCREEN_HALF_SIZE.x, SCREEN_SIZE.y - PADDLE_HALF_HEIGHT),
-                     Vector2(PADDLE_WIDTH, PADDLE_HEIGHT), P1_COLOR, Vector2.right(), PADDLE_SPEED)
-    paddle2 = Paddle(screen, 'P2', Vector2(SCREEN_SIZE.x - PADDLE_HALF_HEIGHT, SCREEN_HALF_SIZE.y),
-                     Vector2(PADDLE_HEIGHT, PADDLE_WIDTH), P2_COLOR, Vector2.down(), PADDLE_SPEED)
-    paddle3 = Paddle(screen, 'P3', Vector2(SCREEN_HALF_SIZE.x, PADDLE_HALF_HEIGHT),
-                     Vector2(PADDLE_WIDTH, PADDLE_HEIGHT), P3_COLOR, Vector2.right(), PADDLE_SPEED)
-    paddle4 = Paddle(screen, 'P4', Vector2(PADDLE_HALF_HEIGHT, SCREEN_HALF_SIZE.y),
-                     Vector2(PADDLE_HEIGHT, PADDLE_WIDTH), P4_COLOR, Vector2.down(), PADDLE_SPEED)
-    ball = Ball(screen, 'ball', SCREEN_HALF_SIZE, BALL_RADIUS, BALL_COLOR)
-    global gameObjects
-    gameObjects = [paddle1, paddle2, paddle3, paddle4, ball]
-    global paddles
-    paddles = [paddle1, paddle2, paddle3, paddle4]
-    global balls
-    balls = [ball]
+def handle_points():
+    for border in borders:
+        for ball in balls:
+            if Physics.box_collider2d_circle_collider_intersects(border.collider, ball.collider):
+                ball.on_hit_border(SCORE_MULTIPLIER)
+                balls.remove(ball)
+                print("am")
+
 
 def move_gameobjects(delta_time):
     for gameobject in gameObjects:
@@ -117,26 +148,13 @@ def handle_events():
             break
 
 
-def draw_borders():
-    pg.draw.rect(screen, P2_COLOR, (SCREEN_SIZE.x - BORDER_THICKNESS, 0, BORDER_THICKNESS, SCREEN_SIZE.y))
-    pg.draw.rect(screen, P4_COLOR, (0, 0, BORDER_THICKNESS, SCREEN_SIZE.y))
-    pg.draw.rect(screen, P1_COLOR, (0, SCREEN_SIZE.y - BORDER_THICKNESS, SCREEN_SIZE.x, BORDER_THICKNESS))
-    pg.draw.rect(screen, P3_COLOR, (0, 0, SCREEN_SIZE.x, BORDER_THICKNESS))
-
-
 def draw_gameobjects():
     for gameObject in gameObjects:
         gameObject.draw()
 
 
-def keep_objects_in_area():
-    for gameObject in gameObjects:
-        gameObject.stay_in_area(SCREEN_SIZE)
-
-
 def draw():
     screen.fill(SCREEN_COLOR)
-    draw_borders()
     draw_gameobjects()
     pg.display.update()
 
