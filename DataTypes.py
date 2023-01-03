@@ -31,6 +31,12 @@ class Vector2:
     def zero():
         return Vector2(0, 0)
 
+    def magnitude(self):
+        return (self.x * self.x + self.y * self.y) ** 0.5
+
+    def normalized(self):
+        return self / self.magnitude()
+
     def __add__(self, other):
         return Vector2(self.x + other.x, self.y + other.y)
 
