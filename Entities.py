@@ -71,6 +71,9 @@ class Ball(GameObject):
         self.owner.earn_score(score)
 
 
+
+
+
 class Border(GameObject):
     def __init__(self, name, position, shape):
         super().__init__(name, position, shape)

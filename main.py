@@ -27,11 +27,13 @@ SCOREBOARD_OFFSET = 25
 
 # GAME SETTINGS
 GAME_TITLE = '4 PLAYER PONG'
-FPS = 120
+FPS = 300
 SCORE_MULTIPLIER = 1
+
 # BALL
 BALL_RADIUS = 10
 BALL_COLOR = BLACK
+BALL_SPEED = 350
 
 # PADDLE
 PADDLE_SPEED = 500
@@ -126,7 +128,8 @@ def init_gameobjects():
     p4_scoreboard = ScoreBoard('ScoreP4', paddle4.position + Vector2.right() * SCOREBOARD_OFFSET, p4_score_shape)
 
     global gameObjects
-    gameObjects = [paddle1, paddle2, paddle3, paddle4, p1_border, p2_border, p3_border, p4_border, p1_scoreboard, p2_scoreboard, p3_scoreboard, p4_scoreboard]
+    gameObjects = [paddle1, paddle2, paddle3, paddle4, p1_border, p2_border, p3_border, p4_border, p1_scoreboard,
+                   p2_scoreboard, p3_scoreboard, p4_scoreboard]
     global paddles
     paddles = [paddle1, paddle2, paddle3, paddle4]
     global borders
@@ -136,13 +139,12 @@ def init_gameobjects():
     init_ball()
 
 
-
 def init_ball():
     ball_shape = Circle(screen, BALL_COLOR, BALL_RADIUS)
     ball = Ball('ball', SCREEN_HALF_SIZE, ball_shape)
     balls.append(ball)
     gameObjects.append(ball)
-    ball.velocity = Vector2.up() * 500
+    ball.velocity = Vector2.up() * BALL_SPEED
 
 
 def handle_collision():
