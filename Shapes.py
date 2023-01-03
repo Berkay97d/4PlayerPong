@@ -25,3 +25,16 @@ class Rect(Shape):
         half_x, half_y = self.size.x * 0.5, self.size.y * 0.5
         rect = (center.x - half_x, center.y - half_y, self.size.x, self.size.y)
         pygame.draw.rect(self.screen, self.color, rect)
+
+
+class Text(Shape):
+    def __init__(self, screen, color, font):
+        super().__init__(screen, color)
+        self.font = font
+
+    def draw(self, center, text):
+        text = self.font.render(text, True, self.color)
+        text_rect = text.get_rect()
+        text_rect.center = center.to_tuple()
+        self.screen.blit(text, text_rect)
+

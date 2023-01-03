@@ -23,6 +23,8 @@ SCREEN_BOTTOM_RIGHT = SCREEN_SIZE
 SCREEN_UP_RIGHT = Vector2(SCREEN_SIZE.x, 0)
 SCREEN_UP_LEFT = Vector2(0, 0)
 
+SCOREBOARD_OFFSET = 25
+
 # GAME SETTINGS
 GAME_TITLE = '4 PLAYER PONG'
 FPS = 120
@@ -54,18 +56,19 @@ gameObjects = []
 paddles = []
 balls = []
 borders = []
+scoreboards = []
 
 # INIT
 pg.init()
 screen = pg.display.set_mode((SCREEN_SIZE.x, SCREEN_SIZE.y))
 pg.display.set_caption(GAME_TITLE)
+font = pygame.font.SysFont('Comic Sans MS', 30)
 
 
 # FUNCTIONS
 def main():
     init_gameobjects()
     clock = pg.time.Clock()
-    balls[0].velocity = Vector2.up() * 500
     while isRunning:
         clock.tick(FPS)
         draw()
@@ -82,41 +85,63 @@ def update():
     handle_points()
 
 
+def draw():
+    screen.fill(SCREEN_COLOR)
+    draw_gameobjects()
+    pg.display.update()
+
+
 def init_gameobjects():
     paddle_shape1 = Rect(screen, P1_COLOR, Vector2(PADDLE_WIDTH, PADDLE_HEIGHT))
     paddle_shape3 = Rect(screen, P3_COLOR, Vector2(PADDLE_WIDTH, PADDLE_HEIGHT))
     paddle_shape2 = Rect(screen, P2_COLOR, Vector2(PADDLE_HEIGHT, PADDLE_WIDTH))
     paddle_shape4 = Rect(screen, P4_COLOR, Vector2(PADDLE_HEIGHT, PADDLE_WIDTH))
 
-    ball_shape = Circle(screen, BALL_COLOR, BALL_RADIUS)
-
     border_shape1 = Rect(screen, P1_COLOR, Vector2(SCREEN_SIZE.x, BORDER_THICKNESS))
     border_shape2 = Rect(screen, P2_COLOR, Vector2(BORDER_THICKNESS, SCREEN_SIZE.y))
     border_shape3 = Rect(screen, P3_COLOR, Vector2(SCREEN_SIZE.x, BORDER_THICKNESS))
     border_shape4 = Rect(screen, P4_COLOR, Vector2(BORDER_THICKNESS, SCREEN_SIZE.y))
 
-
-    paddle1 = Paddle('P1', Vector2(SCREEN_HALF_SIZE.x, SCREEN_SIZE.y - PADDLE_HALF_HEIGHT), paddle_shape1, Vector2.right(), PADDLE_SPEED)
-    paddle2 = Paddle('P2', Vector2(SCREEN_SIZE.x - PADDLE_HALF_HEIGHT, SCREEN_HALF_SIZE.y), paddle_shape2, Vector2.down(), PADDLE_SPEED)
-    paddle3 = Paddle('P3', Vector2(SCREEN_HALF_SIZE.x, PADDLE_HALF_HEIGHT), paddle_shape3, Vector2.right(), PADDLE_SPEED)
-    paddle4 = Paddle('P4', Vector2(PADDLE_HALF_HEIGHT, SCREEN_HALF_SIZE.y), paddle_shape4, Vector2.down(), PADDLE_SPEED)
-
-    ball = Ball('ball', SCREEN_HALF_SIZE, ball_shape, paddle1)
+    paddle1 = Paddle('P1', Vector2(SCREEN_HALF_SIZE.x, SCREEN_SIZE.y - PADDLE_HALF_HEIGHT), paddle_shape1,
+                     Vector2.right(), PADDLE_SPEED)
+    paddle2 = Paddle('P2', Vector2(SCREEN_SIZE.x - PADDLE_HALF_HEIGHT, SCREEN_HALF_SIZE.y), paddle_shape2,
+                     Vector2.up(), PADDLE_SPEED)
+    paddle3 = Paddle('P3', Vector2(SCREEN_HALF_SIZE.x, PADDLE_HALF_HEIGHT), paddle_shape3, Vector2.right(),
+                     PADDLE_SPEED)
+    paddle4 = Paddle('P4', Vector2(PADDLE_HALF_HEIGHT, SCREEN_HALF_SIZE.y), paddle_shape4, Vector2.up(), PADDLE_SPEED)
 
     p1_border = Border('p1', Vector2(SCREEN_HALF_SIZE.x, SCREEN_SIZE.y - BORDER_THICKNESS / 2), border_shape1)
     p2_border = Border('p2', Vector2(SCREEN_SIZE.x - BORDER_THICKNESS / 2, SCREEN_HALF_SIZE.y), border_shape2)
     p3_border = Border('p3', Vector2(SCREEN_HALF_SIZE.x, BORDER_THICKNESS / 2), border_shape3)
     p4_border = Border('p4', Vector2(BORDER_THICKNESS / 2, SCREEN_HALF_SIZE.y), border_shape4)
 
+    p1_score_shape = Text(screen, P1_COLOR, font)
+    p2_score_shape = Text(screen, P2_COLOR, font)
+    p3_score_shape = Text(screen, P3_COLOR, font)
+    p4_score_shape = Text(screen, P4_COLOR, font)
+
+    p1_scoreboard = ScoreBoard('ScoreP1', paddle1.position + Vector2.up() * SCOREBOARD_OFFSET, p1_score_shape)
+    p2_scoreboard = ScoreBoard('ScoreP2', paddle2.position + Vector2.left() * SCOREBOARD_OFFSET, p2_score_shape)
+    p3_scoreboard = ScoreBoard('ScoreP3', paddle3.position + Vector2.down() * SCOREBOARD_OFFSET, p3_score_shape)
+    p4_scoreboard = ScoreBoard('ScoreP4', paddle4.position + Vector2.right() * SCOREBOARD_OFFSET, p4_score_shape)
 
     global gameObjects
-    gameObjects = [paddle1, paddle2, paddle3, paddle4, ball, p1_border, p2_border, p3_border, p4_border]
+    gameObjects = [paddle1, paddle2, paddle3, paddle4, p1_border, p2_border, p3_border, p4_border, p1_scoreboard, p2_scoreboard, p3_scoreboard, p4_scoreboard]
     global paddles
     paddles = [paddle1, paddle2, paddle3, paddle4]
-    global balls
-    balls = [ball]
     global borders
     borders = [p1_border, p2_border, p3_border, p4_border]
+    global scoreboards
+    scoreboards = [p1_scoreboard, p2_scoreboard, p3_scoreboard, p4_scoreboard]
+    init_ball()
+
+
+def init_ball():
+    ball_shape = Circle(screen, BALL_COLOR, BALL_RADIUS)
+    ball = Ball('ball', SCREEN_HALF_SIZE, ball_shape)
+    balls.append(ball)
+    gameObjects.append(ball)
+    ball.velocity = Vector2.up() * 500
 
 
 def handle_collision():
@@ -126,13 +151,20 @@ def handle_collision():
                 ball.on_hit_paddle(paddle)
 
 
+def update_scores():
+    for i in range(len(paddles)):
+        scoreboards[i].score = paddles[i].score
+
+
 def handle_points():
     for border in borders:
         for ball in balls:
             if Physics.box_collider2d_circle_collider_intersects(border.collider, ball.collider):
                 ball.on_hit_border(SCORE_MULTIPLIER)
                 balls.remove(ball)
-                print("point")
+                gameObjects.remove(ball)
+                update_scores()
+                init_ball()
 
 
 def move_gameobjects(delta_time):
@@ -151,12 +183,6 @@ def handle_events():
 def draw_gameobjects():
     for gameObject in gameObjects:
         gameObject.draw()
-
-
-def draw():
-    screen.fill(SCREEN_COLOR)
-    draw_gameobjects()
-    pg.display.update()
 
 
 def handle_inputs():

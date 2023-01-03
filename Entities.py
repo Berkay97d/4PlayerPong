@@ -51,7 +51,7 @@ class Paddle(GameObject):
 
 class Ball(GameObject):
 
-    def __init__(self, name, position, shape, owner):
+    def __init__(self, name, position, shape, owner=None):
         super().__init__(name, position, shape)
         self.collider = CircleCollider(position, shape.radius)
         self.owner = owner
@@ -65,6 +65,8 @@ class Ball(GameObject):
         self.owner = paddle
 
     def on_hit_border(self, score):
+        if self.owner is None:
+            return
         self.owner.earn_score(score)
 
 
@@ -75,3 +77,12 @@ class Border(GameObject):
 
     def draw(self):
         self.shape.draw(self.position)
+
+
+class ScoreBoard(GameObject):
+    def __init__(self, name, position, shape):
+        super().__init__(name, position, shape)
+        self.score = 0
+
+    def draw(self):
+        self.shape.draw(self.position, self.score.__str__())
