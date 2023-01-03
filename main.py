@@ -132,7 +132,7 @@ def handle_points():
             if Physics.box_collider2d_circle_collider_intersects(border.collider, ball.collider):
                 ball.on_hit_border(SCORE_MULTIPLIER)
                 balls.remove(ball)
-                print("am")
+                print("point")
 
 
 def move_gameobjects(delta_time):
