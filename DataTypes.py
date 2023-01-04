@@ -1,3 +1,4 @@
+import random
 from dataclasses import dataclass
 
 
@@ -30,6 +31,26 @@ class Vector2:
     @staticmethod
     def zero():
         return Vector2(0, 0)
+
+    @staticmethod
+    def random():
+        rand = random.uniform(1, 9)
+        if rand<1:
+            return Vector2(-0.5, 0)
+        elif rand<2:
+            return Vector2(-0.6, -0.4)
+        elif rand<2:
+            return Vector2(0, 0.5)
+        elif rand<2:
+            return Vector2(0.5, -1)
+        elif rand<2:
+            return Vector2(0.5, 0)
+        elif rand<2:
+            return Vector2(0.4, 0.6)
+        elif rand<2:
+            return Vector2(0, -0.5)
+        else:
+            return Vector2(-0.4, 0.6)
 
     def magnitude(self):
         return (self.x * self.x + self.y * self.y) ** 0.5

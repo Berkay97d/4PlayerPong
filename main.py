@@ -1,3 +1,5 @@
+import random
+
 import pygame
 
 from Shapes import *
@@ -81,10 +83,11 @@ def main():
 
 
 def update():
-    handle_inputs()
     move_gameobjects(1.0 / FPS)
     handle_collision()
     handle_points()
+    move_paddles()
+    keep_paddles_in_area()
 
 
 def draw():
@@ -144,7 +147,7 @@ def init_ball():
     ball = Ball('ball', SCREEN_HALF_SIZE, ball_shape)
     balls.append(ball)
     gameObjects.append(ball)
-    ball.velocity = Vector2.up() * BALL_SPEED
+    ball.velocity = Vector2.random() * BALL_SPEED
 
 
 def handle_collision():
@@ -173,6 +176,7 @@ def handle_points():
 def move_gameobjects(delta_time):
     for gameobject in gameObjects:
         gameobject.move(delta_time)
+    balls[0].velocity += balls[0].velocity/(FPS*10)
 
 
 def handle_events():
@@ -187,6 +191,74 @@ def draw_gameobjects():
     for gameObject in gameObjects:
         gameObject.draw()
 
+
+def keep_paddles_in_area():
+    paddles[0].stay_area(PADDLE_WIDTH/2, SCREEN_SIZE.x - PADDLE_WIDTH / 2, 0, SCREEN_SIZE.y)
+    paddles[2].stay_area(PADDLE_WIDTH/2, SCREEN_SIZE.x - PADDLE_WIDTH / 2, 0, SCREEN_SIZE.y)
+    paddles[1].stay_area(0, SCREEN_SIZE.x, PADDLE_WIDTH/2, SCREEN_SIZE.y - PADDLE_WIDTH / 2)
+    paddles[3].stay_area(0, SCREEN_SIZE.x, PADDLE_WIDTH/2, SCREEN_SIZE.y - PADDLE_WIDTH / 2)
+
+
+def move_paddles():
+    rand = random.uniform(2, 3)
+    rand2 = random.uniform(0, 1)
+
+    if rand2 > 0.5:
+        if balls[0].position.x > paddles[0].position.x + PADDLE_WIDTH / rand:
+            paddles[0].move_right()
+        elif balls[0].position.x < paddles[0].position.x - PADDLE_WIDTH / rand:
+            paddles[0].move_left()
+        else:
+            paddles[0].stop()
+
+        if balls[0].position.x > paddles[2].position.x - PADDLE_WIDTH / rand:
+            paddles[2].move_right()
+        elif balls[0].position.x < paddles[2].position.x:
+            paddles[2].move_left()
+        else:
+            paddles[2].stop()
+
+        if balls[0].position.y > paddles[1].position.y - PADDLE_WIDTH / rand:
+            paddles[1].move_left()
+        elif balls[0].position.y < paddles[1].position.y + PADDLE_WIDTH / rand:
+            paddles[1].move_right()
+        else:
+            paddles[1].stop()
+
+        if balls[0].position.y > paddles[3].position.y - PADDLE_WIDTH / rand:
+            paddles[3].move_left()
+        elif balls[0].position.y < paddles[3].position.y + PADDLE_WIDTH / rand:
+            paddles[3].move_right()
+        else:
+            paddles[3].stop()
+    else:
+        if balls[0].position.x > paddles[0].position.x - PADDLE_WIDTH / rand:
+            paddles[0].move_right()
+        elif balls[0].position.x < paddles[0].position.x + PADDLE_WIDTH / rand:
+            paddles[0].move_left()
+        else:
+            paddles[0].stop()
+
+        if balls[0].position.x > paddles[2].position.x + PADDLE_WIDTH / rand:
+            paddles[2].move_right()
+        elif  balls[0].position.x < paddles[2].position.x:
+            paddles[2].move_left()
+        else:
+            paddles[2].stop()
+
+        if balls[0].position.y > paddles[1].position.y - PADDLE_WIDTH / rand:
+            paddles[1].move_left()
+        elif balls[0].position.y < paddles[1].position.y + PADDLE_WIDTH / rand:
+            paddles[1].move_right()
+        else:
+            paddles[1].stop()
+
+        if balls[0].position.y > paddles[3].position.y + PADDLE_WIDTH / rand:
+            paddles[3].move_left()
+        elif balls[0].position.y < paddles[3].position.y - PADDLE_WIDTH / rand:
+            paddles[3].move_right()
+        else:
+            paddles[3].stop()
 
 def handle_inputs():
     if get_key(pygame.K_d):

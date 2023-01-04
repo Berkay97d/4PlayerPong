@@ -48,6 +48,17 @@ class Paddle(GameObject):
     def earn_score(self, score):
         self.score += score
 
+    def stay_area(self, x_min, x_max, y_min, y_max):
+        if self.position.x > x_max:
+            self.position.x = x_max
+        elif self.position.x < x_min:
+            self.position.x = x_min
+
+        if self.position.y > y_max:
+            self.position.y = y_max
+        elif self.position.y < y_min:
+            self.position.y = y_min
+
 
 class Ball(GameObject):
 
@@ -69,9 +80,6 @@ class Ball(GameObject):
         if self.owner is None:
             return
         self.owner.earn_score(score)
-
-
-
 
 
 class Border(GameObject):
